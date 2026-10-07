@@ -18,7 +18,8 @@ use App\Http\Controllers\Api\MealRecommendationController;
 use App\Http\Controllers\Api\ChatOrderController;
 use App\Http\Controllers\Api\RestaurantRatingController;
 use App\Http\Controllers\Api\Admin\AdminDietMenuController;
-use App\Http\Controllers\Admin\RestaurantController as AdminRestaurantController;
+use App\Http\Controllers\Api\Admin\RestaurantController as AdminRestaurantController;
+use App\Http\Controllers\Admin\RestaurantController as AdminRestaurantOwnerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,6 +38,7 @@ Route::get('/restaurants/{id}', [RestaurantController::class, 'show']);
 Route::get('/restaurants/slug/{slug}', [RestaurantController::class, 'showBySlug']);
 Route::get('/restaurants/{id}/menu', [RestaurantController::class, 'menu']);
 Route::get('/restaurant-reviews/{restaurant}', [RestaurantRatingController::class, 'publicReviews']);
+Route::get('/restaurant-ratings/{restaurant}', [RestaurantRatingController::class, 'show']);
 
 // Public categories route
 Route::get('/categories', [CategoryController::class, 'index']);
@@ -105,7 +107,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Community ratings
     Route::post('/submit-rating', [RestaurantRatingController::class, 'store']);
-    Route::get('/restaurant-ratings/{restaurant}', [RestaurantRatingController::class, 'show']);
 
     // AI Meal Recommendations
     Route::post('/recommend-meals', [MealRecommendationController::class, 'recommend']);
@@ -123,11 +124,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         
         // Restaurant management
         Route::apiResource('restaurants', AdminRestaurantController::class);
-        Route::get('restaurant-owners', [AdminRestaurantController::class, 'getOwners']);
+        Route::get('restaurant-owners', [AdminRestaurantOwnerController::class, 'getOwners']);
         Route::put('/users/{id}/status', [AdminController::class, 'updateUserStatus']);
         Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
-        Route::put('/restaurants/{id}/status', [AdminRestaurantController::class, 'updateStatus']);
-        Route::post('/restaurants/{id}/toggle-featured', [AdminRestaurantController::class, 'toggleFeatured']);
+        Route::put('/restaurants/{restaurant}/status', [AdminRestaurantController::class, 'updateStatus']);
+        Route::post('/restaurants/{restaurant}/toggle-featured', [AdminRestaurantController::class, 'toggleFeatured']);
         Route::get('/restaurants/{restaurant}/menu-items', [AdminMenuItemController::class, 'index']);
         Route::post('/restaurants/{restaurant}/menu-items', [AdminMenuItemController::class, 'store']);
         Route::get('/restaurants/{restaurant}/menu-items/{menuItem}', [AdminMenuItemController::class, 'show']);

@@ -56,6 +56,7 @@ class RestaurantController extends Controller
             'image' => 'nullable|image|max:10240',
             'cover_image' => 'nullable|image|max:15360',
             'status' => 'nullable|in:active,inactive,closed',
+            'is_featured' => 'nullable|boolean',
         ]);
 
         $owner = User::find($data['owner_id']);
@@ -120,6 +121,7 @@ class RestaurantController extends Controller
             'remove_image' => 'nullable|boolean',
             'remove_cover_image' => 'nullable|boolean',
             'status' => 'nullable|in:active,inactive,closed',
+            'is_featured' => 'nullable|boolean',
         ]);
 
         if (isset($data['owner_id'])) {

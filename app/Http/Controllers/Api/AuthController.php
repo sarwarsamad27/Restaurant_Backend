@@ -34,7 +34,7 @@ class AuthController extends Controller
             'password' => 'required|min:8|confirmed',
             'phone' => 'sometimes|string|max:20',
             'address' => 'sometimes|string|max:255',
-            'role' => 'sometimes|in:customer,driver,owner,staff',
+            'role' => 'sometimes|in:customer,driver,restaurant_owner,owner,staff',
         ]);
 
         try {
@@ -45,7 +45,8 @@ class AuthController extends Controller
             $newUser->password = Hash::make($validated['password']);
             $newUser->phone = $validated['phone'] ?? null;
             $newUser->address = $validated['address'] ?? null;
-            $newUser->role = $validated['role'] ?? 'customer';
+            $role = $validated['role'] ?? 'customer';
+            $newUser->role = $role === 'owner' ? 'restaurant_owner' : $role;
             $newUser->status = 'active'; // Will require email verification later
             $newUser->save();
 

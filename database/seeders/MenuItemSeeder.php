@@ -300,7 +300,43 @@ class MenuItemSeeder extends Seeder
 
         $allItems = array_merge($pizzaItems, $burgerItems, $pastaItems, $sushiItems, $desserts, $beverages);
 
+        // Approximate nutrition per serving: [calories, protein, carbs, fats, weight_loss, weight_gain, maintenance]
+        $nutrition = [
+            'Margherita Pizza' => [800, 32, 98, 28, false, true, true],
+            'Pepperoni Pizza' => [950, 40, 96, 42, false, true, false],
+            'Vegetarian Supreme' => [720, 28, 95, 24, false, true, true],
+            'Classic Cheeseburger' => [700, 38, 45, 38, false, true, false],
+            'Bacon Deluxe Burger' => [900, 48, 48, 55, false, true, false],
+            'Veggie Burger' => [480, 22, 55, 16, true, false, true],
+            'Spaghetti Carbonara' => [750, 30, 85, 32, false, true, true],
+            'Penne Arrabbiata' => [550, 16, 90, 12, true, false, true],
+            'Fettuccine Alfredo' => [970, 28, 92, 52, false, true, false],
+            'Tiramisu' => [450, 7, 45, 26, false, true, false],
+            'Chocolate Brownie' => [420, 5, 55, 22, false, true, false],
+            'Coca Cola' => [140, 0, 39, 0, false, false, false],
+            'Fresh Orange Juice' => [110, 2, 26, 0, true, false, true],
+            'California Roll' => [300, 9, 38, 7, true, false, true],
+            'Salmon Nigiri' => [280, 18, 32, 8, true, false, true],
+            'Spicy Tuna Roll' => [330, 24, 30, 11, true, false, true],
+            'Dragon Roll' => [520, 22, 60, 20, false, true, true],
+            'Vegetable Tempura Roll' => [420, 8, 60, 16, false, false, true],
+            'Rainbow Roll' => [480, 30, 45, 18, true, true, true],
+        ];
+
         foreach ($allItems as $item) {
+            if (isset($nutrition[$item['name']])) {
+                [$cal, $protein, $carbs, $fats, $loss, $gain, $maintain] = $nutrition[$item['name']];
+                $item += [
+                    'calories' => $cal,
+                    'protein' => $protein,
+                    'carbs' => $carbs,
+                    'fats' => $fats,
+                    'is_weight_loss' => $loss,
+                    'is_weight_gain' => $gain,
+                    'is_maintenance' => $maintain,
+                ];
+            }
+
             MenuItem::create($item);
         }
     }

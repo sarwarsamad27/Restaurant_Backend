@@ -56,6 +56,16 @@ class MenuItemController extends Controller
         ], 201);
     }
 
+    public function show(Restaurant $restaurant, MenuItem $menuItem)
+    {
+        $this->ensureMenuItemBelongsToRestaurant($menuItem, $restaurant);
+
+        return response()->json([
+            'success' => true,
+            'data' => $menuItem->load(['restaurant', 'category']),
+        ]);
+    }
+
     public function update(Request $request, Restaurant $restaurant, MenuItem $menuItem)
     {
         $this->ensureMenuItemBelongsToRestaurant($menuItem, $restaurant);

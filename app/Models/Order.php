@@ -131,6 +131,11 @@ class Order extends Model
             $this->{$timestampMap[$status]} = now();
         }
 
+        // Cash is collected on delivery
+        if ($status === 'delivered' && $this->payment_method === 'cash') {
+            $this->payment_status = 'paid';
+        }
+
         $this->save();
     }
 

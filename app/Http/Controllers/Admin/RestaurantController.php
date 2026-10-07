@@ -85,7 +85,7 @@ class RestaurantController extends Controller
 
     public function getOwners()
     {
-        $owners = User::where('role', 'owner')->get(['id', 'name', 'email']);
+        $owners = User::where('role', 'restaurant_owner')->get(['id', 'name', 'email']);
         return response()->json(['data' => $owners]);
     }
 }

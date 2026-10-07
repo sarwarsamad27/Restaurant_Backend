@@ -74,10 +74,17 @@ class OrderController extends Controller
     /**
      * Get single order
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $order = Order::with(['restaurant', 'items.menuItem', 'driver', 'user', 'review'])
             ->findOrFail($id);
+
+        if (!$this->canViewOrder($request->user(), $order)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+            ], 403);
+        }
 
         return response()->json([
             'success' => true,
@@ -383,10 +390,17 @@ class OrderController extends Controller
     /**
      * Track order
      */
-    public function track($id)
+    public function track(Request $request, $id)
     {
         $order = Order::with(['restaurant', 'driver.driverProfile', 'items'])
             ->findOrFail($id);
+
+        if (!$this->canViewOrder($request->user(), $order)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+            ], 403);
+        }
 
         $trackingData = [
             'order' => $order,
@@ -412,5 +426,16 @@ class OrderController extends Controller
             'success' => true,
             'data' => $trackingData,
         ]);
+    }
+
+    /**
+     * Only the customer, the restaurant owner, the assigned driver or an admin may see an order
+     */
+    protected function canViewOrder($user, Order $order): bool
+    {
+        return $user->isAdmin()
+            || $order->user_id === $user->id
+            || $order->driver_id === $user->id
+            || $order->restaurant?->owner_id === $user->id;
     }
 }
