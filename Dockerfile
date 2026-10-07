@@ -1,9 +1,11 @@
 # Laravel API image for Render (Render has no native PHP runtime)
 FROM php:8.2-apache
 
-# System packages composer needs + MySQL driver
+# System packages composer needs + MySQL & MongoDB drivers
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git unzip ca-certificates \
+    && apt-get install -y --no-install-recommends git unzip ca-certificates libssl-dev \
+    && pecl install mongodb \
+    && docker-php-ext-enable mongodb \
     && docker-php-ext-install pdo_mysql \
     && a2enmod rewrite headers \
     && rm -rf /var/lib/apt/lists/*
@@ -20,7 +22,7 @@ WORKDIR /var/www/html
 
 # Install PHP dependencies first so this layer is cached between deploys
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-scripts --no-autoloader --no-interaction --prefer-dist
+RUN composer install --no-dev --no-scripts --no-autoloader --no-interaction --prefer-dist --ignore-platform-req=ext-mongodb
 
 COPY . .
 RUN composer dump-autoload --optimize --no-dev \
