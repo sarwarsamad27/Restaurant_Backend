@@ -15,7 +15,7 @@ class ReviewController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'order_id' => 'required|exists:orders,id',
+            'order_id' => 'required|exists:orders,_id',
             'restaurant_rating' => 'required|integer|min:1|max:5',
             'food_rating' => 'required|integer|min:1|max:5',
             'delivery_rating' => 'nullable|integer|min:1|max:5',

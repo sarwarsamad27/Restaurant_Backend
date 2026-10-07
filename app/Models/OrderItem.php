@@ -3,9 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class OrderItem extends Model
+class OrderItem extends MongoModel
 {
     use HasFactory;
 
@@ -24,6 +23,7 @@ class OrderItem extends Model
         'price' => 'decimal:2',
         'subtotal' => 'decimal:2',
         'customizations' => 'array',
+        'quantity' => 'integer',
     ];
 
     // Relationships

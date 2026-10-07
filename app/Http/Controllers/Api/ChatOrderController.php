@@ -63,9 +63,9 @@ class ChatOrderController extends Controller
     {
         $validated = $request->validate([
             'items' => 'required|array|min:1',
-            'items.*.itemId' => 'required|integer|exists:menu_items,id',
+            'items.*.itemId' => 'required|string|exists:menu_items,_id',
             'items.*.quantity' => 'required|integer|min:1',
-            'restaurant.id' => 'nullable|integer|exists:restaurants,id',
+            'restaurant.id' => 'nullable|string|exists:restaurants,_id',
             'restaurant.name' => 'nullable|string',
         ]);
 

@@ -9,7 +9,7 @@ use App\Models\Order;
 use App\Models\Driver;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class AdminController extends Controller
 {
@@ -36,16 +36,10 @@ class AdminController extends Controller
             'active_orders' => Order::active()->count(),
             'completed_orders' => Order::completed()->count(),
             'cancelled_orders' => Order::cancelled()->count(),
-            'total_revenue' => Order::completed()->sum('total'),
-            'today_revenue' => Order::completed()
-                ->whereDate('delivered_at', today())
-                ->sum('total'),
-            'week_revenue' => Order::completed()
-                ->whereBetween('delivered_at', [now()->startOfWeek(), now()->endOfWeek()])
-                ->sum('total'),
-            'month_revenue' => Order::completed()
-                ->whereMonth('delivered_at', now()->month)
-                ->sum('total'),
+            'total_revenue' => round((float) Order::completed()->sum('total'), 2),
+            'today_revenue' => $this->revenueBetween(now()->startOfDay(), now()->endOfDay()),
+            'week_revenue' => $this->revenueBetween(now()->startOfWeek(), now()->endOfWeek()),
+            'month_revenue' => $this->revenueBetween(now()->startOfMonth(), now()->endOfMonth()),
         ];
 
         // Recent orders
@@ -55,27 +49,31 @@ class AdminController extends Controller
             ->get();
 
         // Top restaurants by orders
-        $topRestaurants = Restaurant::withCount('orders')
-            ->orderBy('orders_count', 'desc')
-            ->limit(5)
-            ->get();
+        $orderCounts = Order::all(['restaurant_id'])->countBy('restaurant_id');
+        $topRestaurants = Restaurant::whereIn('_id', $orderCounts->sortDesc()->keys()->take(5)->all())
+            ->get()
+            ->each(fn ($restaurant) => $restaurant->setAttribute('orders_count', $orderCounts->get($restaurant->id, 0)))
+            ->sortByDesc('orders_count')
+            ->values();
 
         // Orders by status
-        $ordersByStatus = Order::select('status', DB::raw('count(*) as count'))
-            ->groupBy('status')
-            ->get();
+        $ordersByStatus = Order::all(['status'])
+            ->countBy('status')
+            ->map(fn ($count, $status) => ['status' => $status, 'count' => $count])
+            ->values();
 
         // Revenue chart data (last 7 days)
         $revenueChart = Order::completed()
             ->whereBetween('delivered_at', [now()->subDays(7), now()])
-            ->select(
-                DB::raw('DATE(delivered_at) as date'),
-                DB::raw('SUM(total) as revenue'),
-                DB::raw('COUNT(*) as orders')
-            )
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
+            ->get(['delivered_at', 'total'])
+            ->groupBy(fn ($order) => $order->delivered_at->toDateString())
+            ->map(fn ($orders, $date) => [
+                'date' => $date,
+                'revenue' => round((float) $orders->sum('total'), 2),
+                'orders' => $orders->count(),
+            ])
+            ->sortKeys()
+            ->values();
 
         return response()->json([
             'success' => true,
@@ -251,11 +249,11 @@ class AdminController extends Controller
 
         // Filter by date range
         if ($request->has('from_date')) {
-            $query->whereDate('created_at', '>=', $request->from_date);
+            $query->where('created_at', '>=', Carbon::parse($request->from_date)->startOfDay());
         }
 
         if ($request->has('to_date')) {
-            $query->whereDate('created_at', '<=', $request->to_date);
+            $query->where('created_at', '<=', Carbon::parse($request->to_date)->endOfDay());
         }
 
         // Search by order number
@@ -316,7 +314,7 @@ class AdminController extends Controller
             $query->where('role', $request->user_role);
         }
 
-        $userIds = $query->pluck('id')->toArray();
+        $userIds = $query->get()->pluck('id')->toArray();
 
         $this->notificationService->sendPromotion(
             $userIds,
@@ -339,39 +337,43 @@ class AdminController extends Controller
     {
         $period = $request->get('period', 'month'); // day, week, month, year
 
-        $query = Order::completed();
+        [$from, $to] = match ($period) {
+            'day' => [now()->startOfDay(), now()->endOfDay()],
+            'week' => [now()->startOfWeek(), now()->endOfWeek()],
+            'year' => [now()->startOfYear(), now()->endOfYear()],
+            default => [now()->startOfMonth(), now()->endOfMonth()],
+        };
 
-        switch ($period) {
-            case 'day':
-                $query->whereDate('delivered_at', today());
-                break;
-            case 'week':
-                $query->whereBetween('delivered_at', [now()->startOfWeek(), now()->endOfWeek()]);
-                break;
-            case 'month':
-                $query->whereMonth('delivered_at', now()->month);
-                break;
-            case 'year':
-                $query->whereYear('delivered_at', now()->year);
-                break;
-        }
+        $orders = Order::completed()
+            ->whereBetween('delivered_at', [$from, $to])
+            ->get(['restaurant_id', 'payment_method', 'total']);
 
-        $totalRevenue = $query->sum('total');
-        $totalOrders = $query->count();
+        $totalRevenue = round((float) $orders->sum('total'), 2);
+        $totalOrders = $orders->count();
         $averageOrderValue = $totalOrders > 0 ? $totalRevenue / $totalOrders : 0;
 
         // Revenue by restaurant
-        $revenueByRestaurant = $query->select('restaurant_id', DB::raw('SUM(total) as revenue'))
-            ->with('restaurant:id,name')
-            ->groupBy('restaurant_id')
-            ->orderBy('revenue', 'desc')
-            ->limit(10)
-            ->get();
+        $restaurants = Restaurant::whereIn('_id', $orders->pluck('restaurant_id')->unique()->values()->all())
+            ->get(['name'])
+            ->keyBy('id');
+
+        $revenueByRestaurant = $orders->groupBy('restaurant_id')
+            ->map(fn ($group, $restaurantId) => [
+                'restaurant_id' => $restaurantId,
+                'revenue' => round((float) $group->sum('total'), 2),
+                'restaurant' => $restaurants->get($restaurantId)?->only(['id', 'name']),
+            ])
+            ->sortByDesc('revenue')
+            ->take(10)
+            ->values();
 
         // Revenue by payment method
-        $revenueByPaymentMethod = $query->select('payment_method', DB::raw('SUM(total) as revenue'))
-            ->groupBy('payment_method')
-            ->get();
+        $revenueByPaymentMethod = $orders->groupBy('payment_method')
+            ->map(fn ($group, $method) => [
+                'payment_method' => $method,
+                'revenue' => round((float) $group->sum('total'), 2),
+            ])
+            ->values();
 
         return response()->json([
             'success' => true,
@@ -384,5 +386,13 @@ class AdminController extends Controller
                 'revenue_by_payment_method' => $revenueByPaymentMethod,
             ],
         ]);
+    }
+
+    /**
+     * Revenue of delivered orders inside a date range
+     */
+    protected function revenueBetween($from, $to): float
+    {
+        return round((float) Order::completed()->whereBetween('delivered_at', [$from, $to])->sum('total'), 2);
     }
 }

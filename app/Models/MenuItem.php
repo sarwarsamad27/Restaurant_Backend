@@ -3,11 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class MenuItem extends Model
+class MenuItem extends MongoModel
 {
     use HasFactory;
 
@@ -53,6 +52,9 @@ class MenuItem extends Model
         'ingredients' => 'array',
         'allergens' => 'array',
         'rating' => 'decimal:2',
+        'preparation_time' => 'integer',
+        'total_reviews' => 'integer',
+        'sort_order' => 'integer',
         'calories' => 'integer',
         'protein' => 'integer',
         'carbs' => 'integer',

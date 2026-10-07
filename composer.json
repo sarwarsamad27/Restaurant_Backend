@@ -11,6 +11,7 @@
         "laravel/framework": "^9.0",
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
+        "mongodb/laravel-mongodb": "^3.9",
         "stripe/stripe-php": "^10.0",
         "twilio/sdk": "^6.0"
     },

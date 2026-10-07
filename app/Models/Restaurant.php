@@ -3,13 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Models\RestaurantRating;
 
-class Restaurant extends Model
+class Restaurant extends MongoModel
 {
     use HasFactory;
 
@@ -51,6 +49,8 @@ class Restaurant extends Model
         'minimum_order' => 'decimal:2',
         'rating' => 'decimal:2',
         'is_featured' => 'boolean',
+        'delivery_time' => 'integer',
+        'total_reviews' => 'integer',
     ];
 
     protected static function boot()
@@ -103,14 +103,13 @@ class Restaurant extends Model
 
     public function scopeNearby($query, $latitude, $longitude, $radius = 10)
     {
-        // Simple distance calculation (for more accuracy, use Haversine formula)
-        return $query->selectRaw("*, 
-            (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * 
-            cos(radians(longitude) - radians(?)) + sin(radians(?)) * 
-            sin(radians(latitude)))) AS distance", 
-            [$latitude, $longitude, $latitude])
-            ->having('distance', '<', $radius)
-            ->orderBy('distance');
+        // Bounding box around the point (1 degree of latitude is ~111 km)
+        $latDelta = $radius / 111;
+        $lngDelta = $radius / (111 * max(cos(deg2rad((float) $latitude)), 0.01));
+
+        return $query
+            ->whereBetween('latitude', [(float) $latitude - $latDelta, (float) $latitude + $latDelta])
+            ->whereBetween('longitude', [(float) $longitude - $lngDelta, (float) $longitude + $lngDelta]);
     }
 
     // Helper methods
@@ -176,33 +175,20 @@ class Restaurant extends Model
 
     protected function calculateRatingMetrics(): array
     {
-        if (!Schema::hasTable('restaurant_ratings')) {
+        $ratings = $this->communityRatings()->get();
+
+        if ($ratings->isEmpty()) {
             return $this->legacyRatingMetrics();
         }
-
-        $query = $this->communityRatings();
-
-        if (!$query->exists()) {
-            return $this->legacyRatingMetrics();
-        }
-
-        $aggregates = $query->selectRaw('
-            AVG(average_score) as avg_score,
-            AVG(rating_taste) as avg_taste,
-            AVG(rating_quantity) as avg_quantity,
-            AVG(rating_hygiene) as avg_hygiene,
-            AVG(rating_value) as avg_value,
-            COUNT(*) as total
-        ')->first();
 
         return [
-            'trust_score' => round((float) $aggregates->avg_score, 2),
-            'total_ratings' => (int) $aggregates->total,
+            'trust_score' => round((float) $ratings->avg('average_score'), 2),
+            'total_ratings' => $ratings->count(),
             'averages' => [
-                'taste' => round((float) $aggregates->avg_taste, 2),
-                'quantity' => round((float) $aggregates->avg_quantity, 2),
-                'hygiene' => round((float) $aggregates->avg_hygiene, 2),
-                'value' => round((float) $aggregates->avg_value, 2),
+                'taste' => round((float) $ratings->avg('rating_taste'), 2),
+                'quantity' => round((float) $ratings->avg('rating_quantity'), 2),
+                'hygiene' => round((float) $ratings->avg('rating_hygiene'), 2),
+                'value' => round((float) $ratings->avg('rating_value'), 2),
             ],
         ];
     }

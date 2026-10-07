@@ -28,7 +28,7 @@ class MenuItemController extends Controller
     public function store(Request $request, Restaurant $restaurant)
     {
         $data = $request->validate([
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => 'required|exists:categories,_id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
@@ -71,7 +71,7 @@ class MenuItemController extends Controller
         $this->ensureMenuItemBelongsToRestaurant($menuItem, $restaurant);
 
         $data = $request->validate([
-            'category_id' => 'sometimes|exists:categories,id',
+            'category_id' => 'sometimes|exists:categories,_id',
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
             'price' => 'sometimes|numeric|min:0',

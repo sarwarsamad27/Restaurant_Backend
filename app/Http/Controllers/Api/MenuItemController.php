@@ -79,8 +79,8 @@ class MenuItemController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'restaurant_id' => 'required|exists:restaurants,id',
-            'category_id' => 'required|exists:categories,id',
+            'restaurant_id' => 'required|exists:restaurants,_id',
+            'category_id' => 'required|exists:categories,_id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
@@ -152,7 +152,7 @@ class MenuItemController extends Controller
         }
 
         $request->validate([
-            'category_id' => 'sometimes|exists:categories,id',
+            'category_id' => 'sometimes|exists:categories,_id',
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
             'price' => 'sometimes|numeric|min:0',

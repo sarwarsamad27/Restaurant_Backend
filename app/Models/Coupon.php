@@ -3,9 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class Coupon extends Model
+class Coupon extends MongoModel
 {
     use HasFactory;
 
@@ -30,6 +29,8 @@ class Coupon extends Model
         'valid_from' => 'datetime',
         'valid_until' => 'datetime',
         'is_active' => 'boolean',
+        'usage_limit' => 'integer',
+        'used_count' => 'integer',
     ];
 
     // Scopes

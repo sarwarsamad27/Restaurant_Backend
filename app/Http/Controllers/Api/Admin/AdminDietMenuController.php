@@ -39,7 +39,7 @@ class AdminDietMenuController extends Controller
     {
         $validated = Validator::make($request->all(), [
             'items' => 'required|array|min:1',
-            'items.*.id' => 'required|exists:menu_items,id',
+            'items.*.id' => 'required|exists:menu_items,_id',
             'items.*.calories' => 'nullable|integer|min:0|max:20000',
             'items.*.protein' => 'nullable|integer|min:0|max:2000',
             'items.*.carbs' => 'nullable|integer|min:0|max:2000',

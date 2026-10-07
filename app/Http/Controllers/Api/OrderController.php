@@ -98,11 +98,11 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'restaurant_id' => 'required|exists:restaurants,id',
+            'restaurant_id' => 'required|exists:restaurants,_id',
             'order_type' => 'required|in:delivery,takeaway,dine_in',
             'payment_method' => 'required|in:cash,card,stripe,paypal,online',
             'items' => 'required|array|min:1',
-            'items.*.menu_item_id' => 'required|exists:menu_items,id',
+            'items.*.menu_item_id' => 'required|exists:menu_items,_id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.customizations' => 'nullable|array',
             'items.*.special_instructions' => 'nullable|string',
@@ -283,7 +283,7 @@ class OrderController extends Controller
     public function assignDriver(Request $request, $id)
     {
         $request->validate([
-            'driver_id' => 'required|exists:users,id',
+            'driver_id' => 'required|exists:users,_id',
         ]);
 
         $order = Order::findOrFail($id);

@@ -39,7 +39,7 @@ class RestaurantController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'owner_id' => 'required|exists:users,id',
+            'owner_id' => 'required|exists:users,_id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
@@ -102,7 +102,7 @@ class RestaurantController extends Controller
     public function update(Request $request, Restaurant $restaurant)
     {
         $data = $request->validate([
-            'owner_id' => 'sometimes|exists:users,id',
+            'owner_id' => 'sometimes|exists:users,_id',
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
             'phone' => 'nullable|string|max:20',

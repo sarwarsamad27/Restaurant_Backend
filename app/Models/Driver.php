@@ -3,9 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class Driver extends Model
+class Driver extends MongoModel
 {
     use HasFactory;
 
@@ -29,6 +28,7 @@ class Driver extends Model
         'is_verified' => 'boolean',
         'rating' => 'decimal:2',
         'total_earnings' => 'decimal:2',
+        'total_deliveries' => 'integer',
     ];
 
     // Relationships

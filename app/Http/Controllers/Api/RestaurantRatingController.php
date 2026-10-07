@@ -22,8 +22,8 @@ class RestaurantRatingController extends Controller
         }
 
         $data = $request->validate([
-            'restaurant_id' => 'required|exists:restaurants,id',
-            'order_id' => 'nullable|exists:orders,id',
+            'restaurant_id' => 'required|exists:restaurants,_id',
+            'order_id' => 'nullable|exists:orders,_id',
             'rating_taste' => 'required|integer|min:1|max:5',
             'rating_quantity' => 'required|integer|min:1|max:5',
             'rating_hygiene' => 'required|integer|min:1|max:5',

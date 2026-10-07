@@ -3,9 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class Review extends Model
+class Review extends MongoModel
 {
     use HasFactory;
 
@@ -25,6 +24,9 @@ class Review extends Model
     protected $casts = [
         'images' => 'array',
         'is_approved' => 'boolean',
+        'restaurant_rating' => 'integer',
+        'food_rating' => 'integer',
+        'delivery_rating' => 'integer',
     ];
 
     // Relationships

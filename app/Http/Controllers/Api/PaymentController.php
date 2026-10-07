@@ -25,7 +25,7 @@ class PaymentController extends Controller
     public function createStripeIntent(Request $request)
     {
         $request->validate([
-            'order_id' => 'required|exists:orders,id',
+            'order_id' => 'required|exists:orders,_id',
         ]);
 
         $order = Order::findOrFail($request->order_id);
@@ -104,7 +104,7 @@ class PaymentController extends Controller
     public function createPayPalOrder(Request $request)
     {
         $request->validate([
-            'order_id' => 'required|exists:orders,id',
+            'order_id' => 'required|exists:orders,_id',
         ]);
 
         $order = Order::findOrFail($request->order_id);

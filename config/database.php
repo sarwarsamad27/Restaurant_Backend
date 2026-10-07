@@ -4,9 +4,16 @@ use Illuminate\Support\Str;
 
 return [
 
-    'default' => env('DB_CONNECTION', 'mysql'),
+    'default' => env('DB_CONNECTION', 'mongodb'),
 
     'connections' => [
+
+        // Local: mongodb://127.0.0.1:27017   |   Atlas: mongodb+srv://<user>:<password>@<cluster>.mongodb.net/
+        'mongodb' => [
+            'driver' => 'mongodb',
+            'dsn' => env('MONGODB_URI', 'mongodb://127.0.0.1:27017'),
+            'database' => env('MONGODB_DATABASE', 'restaurant_delivery'),
+        ],
 
         'sqlite' => [
             'driver' => 'sqlite',
